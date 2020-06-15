@@ -1,7 +1,6 @@
 import React, { useEffect, useState, ChangeEvent } from 'react';
 import { Dispatch } from 'redux';
-import { ThunkDispatch } from 'redux-thunk';
-import { connect, MapDispatchToProps, MapStateToProps } from 'react-redux';
+import { connect, MapDispatchToProps } from 'react-redux';
 import {
   saveUsername as saveUsernameAction,
   saveUserMessage as saveUserMessageAction,
@@ -21,7 +20,12 @@ interface IAppDispatchToProps {
   saveUserMessage: (user: IUser) => void;
 }
 
-const App: React.FC<IAppOwnProps> = ({ username, userType}): JSX.Element => {
+const AppUnconnected: React.FC<IAppDispatchToProps & IAppOwnProps> = ({ 
+  username, 
+  userType,
+  saveUsername,
+  saveUserMessage
+}): JSX.Element => {
   const [time, setTime] = useState<Date>(() => new Date(Date.now()))
   const [message, setMessage] = useState<string>('')
 
@@ -38,10 +42,18 @@ const App: React.FC<IAppOwnProps> = ({ username, userType}): JSX.Element => {
       setTime(new Date(Date.now()));
     }, 1000);
 
+    if (username) {
+      saveUsername({ username, userMessage: undefined });
+    }
+
     return () => {
       clearInterval(timer);
     }
-  }, [username]);
+  }, [username, saveUsername]);
+
+  useEffect(() => {
+    saveUserMessage({ username, userMessage: message });
+  }, [message, saveUserMessage, username]);
 
   return (
     <div className="App">
@@ -82,4 +94,9 @@ const mapDispatchToProps: MapDispatchToProps<
   },
 });
 
-export default App;
+export const App = connect<
+  {},
+  IAppDispatchToProps,
+  IAppOwnProps,
+  IAppState
+>(null, mapDispatchToProps)(AppUnconnected);
